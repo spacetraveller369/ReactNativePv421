@@ -5,194 +5,148 @@ import CalcButtonType from "./ui/button/CalcButtonType";
 import ICalcButtonData from "./ui/button/ICalcButtonData";
 import { useState } from "react";
 
-const divZeroMessage = "Cannot divide by zero";
-
 export default function Calc() {
-    const {width, height} = useWindowDimensions();
-    const [result, setResult] = useState<string>("0"); // TODO: поєднати окремі стани до одного об'єкту
+    
+    const { width, height } = useWindowDimensions();
+    const [result, setResult] = useState<string>("0");
     const [expression, setExpression] = useState<string>("");
-    const [needClear, setNeedClear] = useState<boolean>(false); // потреба стерти результат при початку введення (після операцій)
-    const [needClrExp, setNeedClrExp] = useState<boolean>(false);
+    const [needClear, setNeedClear] = useState<boolean>(false);
     const [isError, setError] = useState<boolean>(false);
-   
-    const dotSymbol = ',';
-    const minusSymbol = '-';
-    const maxDigits = 16;
 
-    const digitClick = (btn:ICalcButtonData) => {
+    
+    const formatDisplay = (text: string) => {
+        if (text === "0" || isError) return text;
+        const parts = text.split(',');
+       
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0"); 
+        return parts.join(',');
+    };
 
-        var res = result;
-        console.log(res);
-        if(res === "0" || needClear || isError) {
+    const digitClick = (btn: ICalcButtonData) => {
+        let res = result.replace(/\u00A0/g, ''); 
+        if (res === "0" || needClear || isError) {
             res = "";
             setNeedClear(false);
             setError(false);
         }
-
-         if(needClrExp){
-            setExpression("");
-            setNeedClrExp(false);
+        if (res.length < 16) {
+            setResult(res + btn.text);
         }
-        // Обмежити введення 16 цифрами (саме цифрами, точку та знак (мінус) ігнорувати)
-        if(res.replace(dotSymbol, '').replace(minusSymbol, '').length >= maxDigits) return;
-
-        setResult(res + btn.text);
-        
     };
 
-    const backspaceClick = (_:ICalcButtonData) => {
-        if(result.length > 1) {
-            setResult(result.substring(0, result.length - 1));
-        }
-        else {
+    const backspaceClick = () => {
+        let res = result.replace(/\u00A0/g, '');
+        if (res.length > 1) {
+            setResult(res.slice(0, -1));
+        } else {
             setResult("0");
         }
-    }
-
-    const dotClick = (btn:ICalcButtonData) => {
-        // десятична кома (точка):
-        // якщо на рез. "0", то він не стирається, буде "0,"
-        // якщо у рез. вже є кома, то натиснення ігнорується
-        // Символ коми відповідає тексту на кнопці
-        if(!result.includes(btn.text)) {
-            setResult(result + btn.text);
-        }
     };
 
-    const inverseClick = (_:ICalcButtonData) => {
-        setExpression(`1/(${result})`);
-        var arg = resToNumber();
-        if(arg == 0){
-            setResult(divZeroMessage);
-            setError(true);
-        }
-        else {
-            setResult( numToResult(1.0 / arg) );
-        }
-        setNeedClear(true);
-        setNeedClrExp(true);
+    
+    const memoryKeys = [
+        { text: "MC", type: CalcButtonType.disabled },
+        { text: "MR", type: CalcButtonType.disabled },
+        { text: "M+", type: CalcButtonType.operation },
+        { text: "M-", type: CalcButtonType.operation },
+        { text: "MS", type: CalcButtonType.operation },
+    ];
 
-        // 1. Перевищення к-ті цифр 
-        // 2. Символ точки (коми) не відповідає dotSymbol
-        //  2.2 Через це також не парситься число, введене з комою (dotSymbol)
-        // 3. 1/0 ??
-        // 4. Натиснення цифрових кнопок дописується до результату 
-        // 5. Не заповнюється поле виразу
-        // 6. Блокування функціональних кнопок у випадку помилки (коли результат - повідомлення)
-
-    };
-
-    const clearClick = (_:ICalcButtonData) => {
-        setResult("0");
-        setExpression("");
-        setError(false);
-    }
-
-    const resToNumber = (): number => {
-        var res = result.replace(dotSymbol, '.').replace(minusSymbol, '-');
-        return Number(res);
-    };
-
-    const numToResult = (num: number): string => {
-        var res = num.toString();
-        if(num >= 1e-6) { // <= 9.9e-7 автоматично спрацьовує ехр-форма
-            res = res.substring(0, maxDigits + 1); // +1 - на символ коми
-        }
-        res = res.replace('.', dotSymbol); // замінюємо стандарту десятичну точку на dotSymbol
-        return res;
-    }
-
- const portraitView = () => <View style={CalcStyle.calc}>
-        <Text style={CalcStyle.expression}>{expression}</Text>
-        <Text style={[CalcStyle.result, {fontSize: (result.length <= 12 ? 50 : (width - 20) / result.length * 1.8 )}]}>{result}</Text>
-        <View style={CalcStyle.memoryRow}>
-            <Text style={CalcStyle.memoryButton}>MC</Text>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"％",  buttonType: CalcButtonType.operation, action: (btn:ICalcButtonData) => console.log(btn.text)}}/>
-            <CalcButton data={{text:"CE", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"C",  buttonType: CalcButtonType.operation, action: clearClick }}/>
-            <CalcButton data={{text:"⌫", buttonType: CalcButtonType.operation, action: backspaceClick}}/>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"1/x", buttonType: isError ? CalcButtonType.disabled : CalcButtonType.operation, action: inverseClick}}/>
-            <CalcButton data={{text:"x2",  buttonType: isError ? CalcButtonType.disabled : CalcButtonType.operation}}/>
-            <CalcButton data={{text:"Vx",  buttonType: isError ? CalcButtonType.disabled : CalcButtonType.operation}}/>
-            <CalcButton data={{text:"÷",   buttonType: isError ? CalcButtonType.disabled : CalcButtonType.operation}}/>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"7", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"8", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"9", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"×", buttonType: CalcButtonType.operation}}/>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"4", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"5", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"6", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"-", buttonType: CalcButtonType.operation}}/>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"1", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"2", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"3", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"+", buttonType: CalcButtonType.operation}}/>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"+/-", buttonType: CalcButtonType.digit    }}/>
-            <CalcButton data={{text:"0", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:dotSymbol, buttonType: CalcButtonType.digit, action: dotClick }}/>
-            <CalcButton data={{text:"=", buttonType: CalcButtonType.equal    }}/>
-        </View>
-    </View>;
-
-    const landscapeView = () => <View style={CalcStyle.calc}>
-        <View style={CalcStyle.containerResExpMem}>
-            <View style={CalcStyle.containerExpMem}>
+    
+    const portraitView = () => (
+        <View style={CalcStyle.calc}>
+            <View>
                 <Text style={CalcStyle.expression}>{expression}</Text>
-                <View style={CalcStyle.memoryRow}>
-                    <Text style={CalcStyle.memoryButton}>MC</Text>
-                </View>
-            </View>            
-            <Text style={[
-                CalcStyle.result, 
-                {fontSize: (result.length <= 12 ? 50 : (width - 20) / result.length * 1.8 )}]}>{result}</Text>
-        </View>
+                <Text style={[CalcStyle.result, { fontSize: result.length <= 10 ? 50 : 35 }]}>
+                    {formatDisplay(result)}
+                </Text>
+            </View>
 
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"％",  buttonType: CalcButtonType.operation, action: (btn:ICalcButtonData) => console.log(btn.text)}}/>
-            <CalcButton data={{text:"÷", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"7", buttonType: CalcButtonType.digit, action: digitClick    }}/>
-            <CalcButton data={{text:"8", buttonType: CalcButtonType.digit, action: digitClick    }}/>
-            <CalcButton data={{text:"9", buttonType: CalcButtonType.digit, action: digitClick    }}/>
-            <CalcButton data={{text:"C",  buttonType: CalcButtonType.operation}}/>
+            <View style={CalcStyle.memoryRow}>
+                {memoryKeys.map((m, i) => (
+                    <CalcButton key={i} isMemory={true} data={{ text: m.text, buttonType: m.type }} />
+                ))}
+            </View>
+
+            <View style={CalcStyle.buttonRow}>
+                <CalcButton data={{ text: "%", buttonType: CalcButtonType.operation }} />
+                <CalcButton data={{ text: "CE", buttonType: CalcButtonType.operation }} />
+                <CalcButton data={{ text: "C", buttonType: CalcButtonType.operation }} />
+                <CalcButton data={{ text: "\u232B", buttonType: CalcButtonType.operation, action: backspaceClick }} />
+            </View>
+            <View style={CalcStyle.buttonRow}>
+                <CalcButton data={{ text: "1/x", buttonType: CalcButtonType.operation }} />
+                <CalcButton data={{ text: "x\u00B2", buttonType: CalcButtonType.operation }} />
+                <CalcButton data={{ text: "\u221A", buttonType: CalcButtonType.operation }} />
+                <CalcButton data={{ text: "\u00F7", buttonType: CalcButtonType.operation }} />
+            </View>
+            <View style={CalcStyle.buttonRow}>
+                <CalcButton data={{ text: "7", buttonType: CalcButtonType.digit, action: digitClick }} />
+                <CalcButton data={{ text: "8", buttonType: CalcButtonType.digit, action: digitClick }} />
+                <CalcButton data={{ text: "9", buttonType: CalcButtonType.digit, action: digitClick }} />
+                <CalcButton data={{ text: "\u00D7", buttonType: CalcButtonType.operation }} />
+            </View>
+            <View style={CalcStyle.buttonRow}>
+                <CalcButton data={{ text: "\u00B1", buttonType: CalcButtonType.digit }} />
+                <CalcButton data={{ text: "0", buttonType: CalcButtonType.digit, action: digitClick }} />
+                <CalcButton data={{ text: ",", buttonType: CalcButtonType.digit }} />
+                <CalcButton data={{ text: "=", buttonType: CalcButtonType.equal }} />
+            </View>
         </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"1/x", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"×", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"4", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"5", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"6", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"CE", buttonType: CalcButtonType.operation}}/>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"x2", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"-", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"1", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"2", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"3", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:"⌫", buttonType: CalcButtonType.operation, action: backspaceClick}}/>
-        </View>
-        <View style={CalcStyle.buttonRow}>
-            <CalcButton data={{text:"Vx", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"+", buttonType: CalcButtonType.operation}}/>
-            <CalcButton data={{text:"+/-", buttonType: CalcButtonType.digit    }}/>
-            <CalcButton data={{text:"0", buttonType: CalcButtonType.digit, action: digitClick }}/>
-            <CalcButton data={{text:",", buttonType: CalcButtonType.digit, action: dotClick    }}/>
-            <CalcButton data={{text:"=", buttonType: CalcButtonType.equal    }}/>
-        </View>
-    </View>;        
-        
+    );
+
+    const landscapeView = () => (
+        <View style={CalcStyle.calc}>
+            <View style={CalcStyle.containerResExpMem}>
+                <View style={CalcStyle.containerExpMem}>
+                    <Text style={CalcStyle.expression}>{expression}</Text>
+                    <View style={CalcStyle.memoryRow}>
+                        {memoryKeys.map((m, i) => (
+                            <CalcButton key={i} isMemory={true} data={{ text: m.text, buttonType: m.type }} />
+                        ))}
+                    </View>
+                </View>
+                <Text style={[CalcStyle.result, { fontSize: 40 }]}>
+                    {formatDisplay(result)}
+                </Text>
+            </View>
+
+            <View style={CalcStyle.buttonRow}>
+                <CalcButton data={{ text: "7", buttonType: CalcButtonType.digit, action: digitClick }} />
+                <CalcButton data={{ text: "8", buttonType: CalcButtonType.digit, action: digitClick }} />
+                <CalcButton data={{ text: "9", buttonType: CalcButtonType.digit, action: digitClick }} />
+                <CalcButton data={{ text: "\u00F7", buttonType: CalcButtonType.operation }} />
+                <CalcButton data={{ text: "C", buttonType: CalcButtonType.operation }} />
+            </View>
+             <View style={CalcStyle.buttonRow}>
+                 <CalcButton data={{ text: "1/x", buttonType: CalcButtonType.operation }} />
+                 <CalcButton data={{ text: "\u00D7", buttonType: CalcButtonType.operation }} />
+                 <CalcButton data={{ text: "4", buttonType: CalcButtonType.digit, action: digitClick }} />
+                 <CalcButton data={{ text: "5", buttonType: CalcButtonType.digit, action: digitClick }} />
+                 <CalcButton data={{ text: "6", buttonType: CalcButtonType.digit, action: digitClick }} />
+                 <CalcButton data={{ text: "CE", buttonType: CalcButtonType.operation }} />
+            </View>
+            <View style={CalcStyle.buttonRow}>
+                 <CalcButton data={{ text: "x\u00B2", buttonType: CalcButtonType.operation }} />
+                 <CalcButton data={{ text: "-", buttonType: CalcButtonType.operation }} />
+                 <CalcButton data={{ text: "1", buttonType: CalcButtonType.digit, action: digitClick }} />
+                 <CalcButton data={{ text: "2", buttonType: CalcButtonType.digit, action: digitClick }} />
+                 <CalcButton data={{ text: "3", buttonType: CalcButtonType.digit, action: digitClick }} />
+                 <CalcButton data={{ text: "\u232B", buttonType: CalcButtonType.operation, action: backspaceClick }} />
+            </View>
+            <View style={CalcStyle.buttonRow}>
+                 <CalcButton data={{ text: "\u221A", buttonType: CalcButtonType.operation }} />
+                 <CalcButton data={{ text: "+", buttonType: CalcButtonType.operation }} />
+                 <CalcButton data={{ text: "\u00B1", buttonType: CalcButtonType.digit }} />
+                 <CalcButton data={{ text: "0", buttonType: CalcButtonType.digit, action: digitClick }} />
+                 <CalcButton data={{ text: ",", buttonType: CalcButtonType.digit }} />
+                 <CalcButton data={{ text: "=", buttonType: CalcButtonType.equal }} />
+            </View>
+         </View>
+     );
+
+
+
     return width < height ? portraitView() : landscapeView();
 }
 /*
