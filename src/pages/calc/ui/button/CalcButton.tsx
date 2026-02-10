@@ -6,10 +6,10 @@ import CalcButtonType from "./CalcButtonType";
 export default function CalcButton({data}:{data:ICalcButtonData}) {
     return <TouchableOpacity 
         onPress={() => { 
-    if (data.action && data.buttonType !== CalcButtonType.disabled) {
-        data.action(data);
-    }
-}}
+            if(data.action && data.buttonType != CalcButtonType.disabled) {
+                data.action(data);
+            }
+        }} 
         style={[
             styles.calcButton,
             ( data.buttonType == CalcButtonType.digit ? styles.digitButton
@@ -24,29 +24,36 @@ export default function CalcButton({data}:{data:ICalcButtonData}) {
 const styles = StyleSheet.create({
     calcButton: {
         flex: 1,
-        margin: 1.5,
-        borderRadius: 4,
-        display: "flex",
+        margin: 5,            
+        borderRadius: 15,     
+        height: 70,           
         justifyContent: "center",
         alignItems: "center",
+        elevation: 3, 
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
     },
     calcButtonText: {
-        color: textColor,
-        fontSize: 18,
+        color: textColor,     
+        fontSize: 22,         
+        fontWeight: "500",
     },
     digitButton: {
-        backgroundColor: "#3a3a3a",
-
+        backgroundColor: "#333333", 
     },
     operButton: {
-        backgroundColor: "#333",
-
+        backgroundColor: "#444444", 
     },
     equalButton: {
-        backgroundColor: "#4e97f1",
-
+        backgroundColor: "#4e97f1", 
     },
     disabledButton: {
-        backgroundColor: "#282828",
+        backgroundColor: "#222222", 
+        opacity: 0.5,               
     },
+    disabledText: {
+        color: "#666666",           
+    }
 });
