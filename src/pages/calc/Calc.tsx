@@ -19,35 +19,76 @@ export default function Calc() {
     const minusSymbol = '-';
     const maxDigits = 16;
 
-    const digitClick = (btn:ICalcButtonData) => {
-
-        var res = result;
-        console.log(res);
-        if(res === "0" || needClear || isError) {
-            res = "";
-            setNeedClear(false);
-            setError(false);
-        }
-
-         if(needClrExp){
-            setExpression("");
-            setNeedClrExp(false);
-        }
-        // Обмежити введення 16 цифрами (саме цифрами, точку та знак (мінус) ігнорувати)
-        if(res.replace(dotSymbol, '').replace(minusSymbol, '').length >= maxDigits) return;
-
-        setResult(res + btn.text);
-        
+    const formatWithSpaces = (value: string): string => {
+    
+    const clean = value.replace(/\s/g, "");
+    
+    const parts = clean.split(dotSymbol);
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, "\u2004");
+    return parts.join(dotSymbol);
     };
 
-    const backspaceClick = (_:ICalcButtonData) => {
-        if(result.length > 1) {
-            setResult(result.substring(0, result.length - 1));
+    const digitClick = (btn:ICalcButtonData) => {
+
+        //var res = result;
+        //console.log(res);
+        //if(res === "0" || needClear || isError) {
+        //    res = "";
+        //    setNeedClear(false);
+        //    setError(false);
+        //}
+
+        // if(needClrExp){
+        //    setExpression("");
+        //    setNeedClrExp(false);
+        //}
+        // Обмежити введення 16 цифрами (саме цифрами, точку та знак (мінус) ігнорувати)
+        //if(res.replace(dotSymbol, '').replace(minusSymbol, '').length >= maxDigits) return;
+
+        //setResult(res + btn.text);
+        
+    //}; 
+
+        let res = result;
+        if (res === "0" || needClear || isError) {
+        res = "";
+        setNeedClear(false);
+        setError(false);
         }
-        else {
-            setResult("0");
-        }
+        if (needClrExp) {
+        setExpression("");
+        setNeedClrExp(false);
     }
+
+    const cleanValue = res.replace(/\s/g, '').replace(dotSymbol, '').replace(minusSymbol, '');
+    
+    if (cleanValue.length >= maxDigits) return;
+
+    
+    const newRawValue = res.replace(/\s/g, '') + btn.text;
+    setResult(formatWithSpaces(newRawValue));
+};
+
+    //const backspaceClick = (_:ICalcButtonData) => {
+    //    if(result.length > 1) {
+    //        setResult(result.substring(0, result.length - 1));
+    //    }
+    //    else {
+    //        setResult("0");
+    //    }
+    //}
+
+    const backspaceClick = (_: ICalcButtonData) => {
+    
+    const cleanValue = result.replace(/\s/g, "");
+    
+    if (cleanValue.length > 1) {
+        const sliced = cleanValue.substring(0, cleanValue.length - 1);
+        setResult(formatWithSpaces(sliced));
+        } else {
+        setResult("0");
+        }
+};
 
     const dotClick = (btn:ICalcButtonData) => {
         // десятична кома (точка):
