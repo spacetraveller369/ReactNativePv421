@@ -25,44 +25,36 @@ export default function Swipe() {
     const beginGesture = (e:GestureResponderEvent) => {
         startEvent = e;
     };
-    const endGesture = (e: GestureResponderEvent) => {
+      const endGesture = (e: GestureResponderEvent) => {
         if (startEvent != null) {
             const dx = e.nativeEvent.pageX - startEvent.nativeEvent.pageX;
             const dy = e.nativeEvent.pageY - startEvent.nativeEvent.pageY;
             const dt = e.nativeEvent.timestamp - startEvent.nativeEvent.timestamp;
 
-           
-            const isSwipeLongEnough = Math.abs(dx) > minSwipeLength || Math.abs(dy) > minSwipeLength;
+            
+            const isLongEnough = Math.sqrt(dx * dx + dy * dy) > minSwipeLength;
             const isFastEnough = (Math.abs(dx) / dt > minSwipeVelocity) || (Math.abs(dy) / dt > minSwipeVelocity);
 
-            if (isSwipeLongEnough && isFastEnough) {
+            if (isLongEnough && isFastEnough) {
                 
-                const ratio = Math.abs(dx) / Math.abs(dy);
-                const isDiagonal = ratio > 0.5 && ratio < 2.0;
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-                if (isDiagonal) {
-                    if ((dx > 0 && dy > 0) || (dx < 0 && dy < 0)) {
-                        
-                        data.eventMessage = "Main Diagonal (↘↖)";
-                    } else {
-                        
-                        data.eventMessage = "Anti-Diagonal (↙↗)";
-                    }
+                if (angle >= 0 && angle < 90) {
+                    data.eventMessage = "Diagonal: Down-Right (↘)";
+                } else if (angle >= 90 && angle <= 180) {
+                    data.eventMessage = "Diagonal: Down-Left (↙)";
+                } else if (angle < -90 && angle >= -180) {
+                    data.eventMessage = "Diagonal: Up-Left (↖)";
                 } else {
-                    
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        data.eventMessage = dx > 0 ? "Right" : "Left";
-                    } else {
-                        data.eventMessage = dy > 0 ? "Bottom" : "Top";
-                    }
+                    data.eventMessage = "Diagonal: Up-Right (↗)";
                 }
             } else {
-                data.eventMessage = "Too short or slow";
+                data.eventMessage = "Swipe too short or slow";
             }
 
             setData({
                 ...data,
-                eventDetails: `dx=${dx.toFixed(1)}, dy=${dy.toFixed(1)}, dt=${dt.toFixed(0)}`
+                eventDetails: `dx=${dx.toFixed(1)}, dy=${dy.toFixed(1)}, angle=${(Math.atan2(dy, dx) * 180 / Math.PI).toFixed(0)}°`
             });
             startEvent = null;
         }
