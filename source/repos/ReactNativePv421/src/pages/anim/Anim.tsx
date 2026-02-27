@@ -1,6 +1,6 @@
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Animated, Pressable, Text, View, Easing } from 'react-native';
 import AnimStyle from './css/AnimStyle';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 
 let opacityValue = new Animated.Value(1);      // З метою утворення анімації вводиться 
                                                // Animated.Value - об'єкт, що керує зміною значення
@@ -31,7 +31,8 @@ export default function Anim() {               // з ініціалізаціє�
                 toValue: 1.0,                  // анімація збільшення прозорості до початкового
                 useNativeDriver: true,         // стану (1)
                 duration: 1000,                // 
-            }),                                // 
+            }), 
+                                           // 
         ]).start();                            // старт - один раз для всієї послідовності
     };
 
@@ -110,6 +111,46 @@ export default function Anim() {               // з ініціалізаціє�
         ]).start();
     };
 
+    const hwAnim = useRef({
+        xy: new Animated.ValueXY({ x: 0, y: 0 }),
+        opacity: new Animated.Value(0.6),
+        scale: new Animated.Value(1),
+        rotate: new Animated.Value(0),
+    }).current;
+
+    const startHomeworkAnimation = () => {
+        Animated.sequence([
+            
+            Animated.parallel([
+                Animated.timing(hwAnim.xy, { toValue: { x: 50, y: -50 }, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.scale, { toValue: 0.3, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.opacity, { toValue: 0.3, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.rotate, { toValue: 30, duration: 1000, useNativeDriver: true }),
+            ]),
+            
+            Animated.parallel([
+                Animated.timing(hwAnim.xy, { toValue: { x: 0, y: 0 }, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.scale, { toValue: 1.0, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.opacity, { toValue: 0.6, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.rotate, { toValue: 0, duration: 1000, useNativeDriver: true }),
+            ]),
+            
+            Animated.parallel([
+                Animated.timing(hwAnim.xy, { toValue: { x: -50, y: 50 }, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.scale, { toValue: 1.0, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.opacity, { toValue: 1.0, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.rotate, { toValue: -30, duration: 1000, useNativeDriver: true }),
+            ]),
+            
+            Animated.parallel([
+                Animated.timing(hwAnim.xy, { toValue: { x: 0, y: 0 }, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.scale, { toValue: 1.0, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.opacity, { toValue: 0.6, duration: 1000, useNativeDriver: true }),
+                Animated.timing(hwAnim.rotate, { toValue: 0, duration: 1000, useNativeDriver: true }),
+            ]),
+        ]).start();
+    };
+
     return <View style={AnimStyle.animLayout}>
 
         <View style={AnimStyle.animRow}>
@@ -168,18 +209,25 @@ export default function Anim() {               // з ініціалізаціє�
             </View>
 
             <View style={AnimStyle.animItem}>
-                {/* Д.З. Реалізувати усі види анімацій до паралельного виконання:
-                    вихідне положення (центр прозорість 0.6) -> 
-                     зрушення праворуч і вгору, зменшення масштабу і прозорості (до 0.3), поворот на 30 гр. ->
-                    центр ->
-                     зрушення ліворуч і вниз, збільшення масштабу і прозорості (до 1.0), поворот на -30 гр. ->
-                    центр   */}
+                <Pressable onPress={startHomeworkAnimation}>
+                    <Animated.View style={{
+                        opacity: hwAnim.opacity,
+                        transform: [
+                            { translateX: hwAnim.xy.x },
+                            { translateY: hwAnim.xy.y },
+                            { scale: hwAnim.scale },
+                            { rotate: hwAnim.rotate.interpolate({ inputRange: [-180, 180], outputRange: ['-180deg', '180deg'] }) }
+                        ]
+                    }}>
+                        <View style={AnimStyle.animBlock}></View>
+                    </Animated.View>
+                </Pressable>
+                <Text style={AnimStyle.animLabel}>ДЗ (Параллельная)</Text>
             </View>
         </View>
     
     </View>;
 }
-
 /*
 Анімації. 
 Double Animation - різновид анімацій, який дозволяє автоматично перераховувати
