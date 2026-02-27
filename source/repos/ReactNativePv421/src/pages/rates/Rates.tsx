@@ -31,6 +31,22 @@ export default function Rates() {
     }, [filter, rates]);
 
     useEffect(() => {
+    
+    if (rates.length > 0) {
+        
+        const dateStr = rates[0].exchangedate; 
+        
+        
+        const [d, m, y] = dateStr.split('.').map(Number);
+        const newDate = new Date(y, m - 1, d);
+
+        if (newDate.toDateString() !== date.toDateString()) {
+            setDate(newDate);
+        }
+    }
+}, [rates]);
+
+    useEffect(() => {
         if(rates.length > 0) { 
             setLoading(true);
             NbuApi.getRatesForDate(date).then(setRates).finally(() => setLoading(false));
