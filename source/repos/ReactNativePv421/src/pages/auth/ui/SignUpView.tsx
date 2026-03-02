@@ -10,7 +10,7 @@ interface IUserFormData {
     email: string,
     birthdate: Date|null,
     password: string,
-    // repeat: string,
+    repeat: string,
     phone: string
 };
 
@@ -19,6 +19,7 @@ const emptyUserFormData = {
     email: "",
     birthdate: null,
     password: "",
+    repeat: "",
     phone: ""
 };
 const testUserFormData = {
@@ -26,6 +27,7 @@ const testUserFormData = {
     email: "exp_user@ukr.net",
     birthdate: new Date('2000-01-01'),
     password: "123",
+    repeat: "123",
     phone: "+380123456789"
 };
 
@@ -34,6 +36,21 @@ export default function SignUpView({setPageMode}:{setPageMode:React.Dispatch<Rea
     const [isFormValid, setFormValid] = useState(false);
     const [isOpen, setOpen] = useState<boolean>(false);
     const {showModal} = useContext(AppContext);
+
+    const validateForm = (): string | null => {
+        if (userFormData.name.length <= 2) return "Ім'я занадто коротке (мінімум 3 символи)";
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userFormData.email)) return "Некоректний формат E-mail";
+        
+        const phoneRegex = /^\+\d{12}$/;
+        if (!phoneRegex.test(userFormData.phone)) return "Телефон має бути у форматі +380XXXXXXXXX (з плюсом та 12 цифр)";
+        
+        if (userFormData.password.length < 3) return "Пароль занадто короткий";
+        if (userFormData.password !== userFormData.repeat) return "Паролі не збігаються";
+        
+        return null; 
+    };
 
     useEffect(() => {
         setFormValid(
@@ -45,12 +62,13 @@ export default function SignUpView({setPageMode}:{setPageMode:React.Dispatch<Rea
     }, [userFormData]);
 
     const onSignupButtonPress = () => {
-        if(!isFormValid) {
+        const error = validateForm();
+        if (error) {
             showModal({
                 title: "Помилка реєстрації",
-                message: "Заповніть усі поля форми",
-            });   // TODO: Деталізувати причини помилки - які поля із зауваженнями
-            return;
+                message: error, 
+        });
+        return;
         }
         const sentData = {
             ...userFormData,
@@ -138,6 +156,13 @@ export default function SignUpView({setPageMode}:{setPageMode:React.Dispatch<Rea
             <TextInput secureTextEntry={true} style={AuthStyle.authRowInput} 
                 value={userFormData.password} 
                 onChangeText={t => setUserFormData({...userFormData, password:t})} />
+        </View>
+
+        <View style={AuthStyle.authRow}>
+            <Text style={AuthStyle.authRowText}>Пароль (ще раз)</Text>
+            <TextInput secureTextEntry={true} style={AuthStyle.authRowInput} 
+                value={userFormData.repeat} 
+                onChangeText={t => setUserFormData({...userFormData, repeat:t})}  />
         </View>
 
         <FirmButton 
