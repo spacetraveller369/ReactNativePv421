@@ -11,7 +11,7 @@ interface IUserFormData {
     birthdate: Date|null,
     password: string,
     repeat: string,
-    phone: string
+    phone: string,
     city: string
 };
 
@@ -22,7 +22,7 @@ const emptyUserFormData = {
     password: "",
     repeat: "",
     phone: "",
-    city: "",
+    city: ""
 };
 const testUserFormData = {
     name: "Досвічений Користувач",
