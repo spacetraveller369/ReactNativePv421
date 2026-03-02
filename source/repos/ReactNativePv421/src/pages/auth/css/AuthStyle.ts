@@ -52,8 +52,10 @@ const AuthStyle = StyleSheet.create({
         backgroundColor: "#333",
     },
     authButtonText: {
-        // color: textColor,
+        color: textColor,
         textAlign: "center",
+        fontSize: 16,
+        fontWeight: 'bold',
     }
 });
 
