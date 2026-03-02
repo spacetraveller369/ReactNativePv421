@@ -12,6 +12,7 @@ interface IUserFormData {
     password: string,
     repeat: string,
     phone: string
+    city: string
 };
 
 const emptyUserFormData = {
@@ -20,7 +21,8 @@ const emptyUserFormData = {
     birthdate: null,
     password: "",
     repeat: "",
-    phone: ""
+    phone: "",
+    city: "",
 };
 const testUserFormData = {
     name: "Досвічений Користувач",
@@ -28,7 +30,8 @@ const testUserFormData = {
     birthdate: new Date('2000-01-01'),
     password: "123",
     repeat: "123",
-    phone: "+380123456789"
+    phone: "+380123456789",
+    city: "Київ"
 };
 
 export default function SignUpView({setPageMode}:{setPageMode:React.Dispatch<React.SetStateAction<string>>}) {   // Register
