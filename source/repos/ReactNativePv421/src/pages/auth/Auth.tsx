@@ -1,6 +1,6 @@
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import AuthStyle from './css/AuthStyle';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { textColor } from '../../features/values/colors';
 import AppContext from '../../features/context/AppContext';
 import { ButtonTypes, FirmButton } from '../../features/ui/button/FirmButton';
@@ -40,6 +40,18 @@ function SignedView() {
     
     const [isEditing, setIsEditing] = useState(false);
     const [tempUser, setTempUser] = useState(user!); 
+    const [isValid, setIsValid] = useState(true);
+
+    useEffect(() => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\+\d{12}$/;
+        
+        const isEmailValid = emailRegex.test(tempUser.email);
+        const isPhoneValid = phoneRegex.test(tempUser.phone || "");
+        const isNameValid = tempUser.name.length > 2;
+
+        setIsValid(isEmailValid && isPhoneValid && isNameValid);
+    }, [tempUser]);
 
     const signOutClick = () => {
         setUser(null);
@@ -50,44 +62,76 @@ function SignedView() {
         setIsEditing(false); 
     }
 
-    const isValid = tempUser.email.includes("@") && tempUser.phone!.length > 9;
+    console.log("Поточний користувач:", user);
 
     return <View style={AuthStyle.authContainer}>
+        
         <View style={AuthStyle.authRow}>
-            <Text style={AuthStyle.authRowText}>Вітання, {user!.name}</Text>
+            <Text style={AuthStyle.authRowText}>Ім'я:</Text>
+            {isEditing ? (
+                <TextInput style={AuthStyle.authRowInput} value={tempUser.name} 
+                    onChangeText={t => setTempUser({...tempUser, name: t})} />
+            ) : (
+                <Text style={AuthStyle.authRowText}>{user!.name}</Text>
+            )}
         </View>
 
         <View style={AuthStyle.authRow}>
             <Text style={AuthStyle.authRowText}>E-mail:</Text>
             {isEditing ? (
-                <TextInput style={AuthStyle.authRowInput} value={tempUser.email} onChangeText={t => setTempUser({...tempUser, email: t})} />
+                <TextInput style={AuthStyle.authRowInput} value={tempUser.email} 
+                    onChangeText={t => setTempUser({...tempUser, email: t})} />
             ) : (
                 <Text style={AuthStyle.authRowText}>{user!.email}</Text>
             )}
         </View>
 
+        
         <View style={AuthStyle.authRow}>
             <Text style={AuthStyle.authRowText}>Телефон:</Text>
             {isEditing ? (
-                <TextInput style={AuthStyle.authRowInput} value={tempUser.phone} onChangeText={t => setTempUser({...tempUser, phone: t})} />
+                <TextInput style={AuthStyle.authRowInput} value={tempUser.phone} 
+                    onChangeText={t => setTempUser({...tempUser, phone: t})} />
             ) : (
                 <Text style={AuthStyle.authRowText}>{user!.phone}</Text>
             )}
         </View>
 
         <View style={AuthStyle.authRow}>
+            <Text style={AuthStyle.authRowText}>Місто:</Text>
+            {isEditing ? (
+                <TextInput 
+                    style={AuthStyle.authRowInput} 
+                    value={tempUser.city || ""} 
+                    onChangeText={t => setTempUser({...tempUser, city: t})} 
+                />
+            ) : (
+                <Text style={AuthStyle.authRowText}>{user!.city || "Не вказано"}</Text>
+            )}
+        </View>
+
+        
+        <View style={AuthStyle.authRow}>
             {isEditing ? (
                 <>
-                    <TouchableOpacity style={AuthStyle.authButton} onPress={onSave} disabled={!isValid}>
-                        <Text style={[AuthStyle.authButtonText, {color: isValid ? textColor : "#777"}]}>Зберегти</Text>
+                
+                    <TouchableOpacity 
+                        style={[AuthStyle.authButton, {opacity: isValid ? 1 : 0.5}]} 
+                        onPress={onSave} 
+                        disabled={!isValid}>
+                        <Text style={AuthStyle.authButtonText}>Зберегти</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={AuthStyle.authButton} onPress={() => setIsEditing(false)}>
-                        <Text style={[AuthStyle.authButtonText, {color: textColor}]}>Скасувати</Text>
+                    
+                    <TouchableOpacity style={AuthStyle.authButton} onPress={() => {
+                        setTempUser(user!); 
+                        setIsEditing(false);
+                    }}>
+                        <Text style={AuthStyle.authButtonText}>Скасувати</Text>
                     </TouchableOpacity>
                 </>
             ) : (
                 <TouchableOpacity style={AuthStyle.authButton} onPress={() => setIsEditing(true)}>
-                    <Text style={[AuthStyle.authButtonText, {color: textColor}]}>Редагувати</Text>
+                    <Text style={AuthStyle.authButtonText}>Редагувати</Text>
                 </TouchableOpacity>
             )}
         </View>
