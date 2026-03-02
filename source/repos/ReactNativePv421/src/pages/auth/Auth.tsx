@@ -6,7 +6,7 @@ import AppContext from '../../features/context/AppContext';
 import { ButtonTypes, FirmButton } from '../../features/ui/button/FirmButton';
 import SignUpView from './ui/SignUpView';
 import SignInView from './ui/SignInView';
-
+import MessageModal from '../../features/interfaces/modal/MessageModal';
 
 export default function Auth() {
     const {user} = useContext(AppContext);
@@ -41,6 +41,7 @@ function SignedView() {
     const [isEditing, setIsEditing] = useState(false);
     const [tempUser, setTempUser] = useState(user!); 
     const [isValid, setIsValid] = useState(true);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     useEffect(() => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -137,11 +138,33 @@ function SignedView() {
         </View>
 
         <View style={AuthStyle.authRow}>
-            <TouchableOpacity style={AuthStyle.authButton} onPress={signOutClick}>
-                <Text style={[AuthStyle.authButtonText, {color: textColor}]}>Вихід</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={AuthStyle.authButton} onPress={() => setIsModalVisible(true)}>
+                    <Text style={[AuthStyle.authButtonText, {color: textColor}]}>Вихід</Text>
+                </TouchableOpacity>
         </View>
-    </View>;
+
+ {isModalVisible && (
+            <MessageModal 
+                buttons={[
+                    { 
+                        title: 'Так', 
+                        buttonType: ButtonTypes.danger, 
+                        action: () => {
+                            setIsModalVisible(false);
+                            signOutClick(); 
+                        } 
+                    },
+                    { 
+                        title: 'Ні', 
+                        buttonType: ButtonTypes.primary, 
+                        action: () => setIsModalVisible(false) 
+                    }
+                ]} 
+            />
+        )}
+
+    </View>
+    ;
 }
 /*
 Д.З. Стилізувати сторінку профіля користувача.
