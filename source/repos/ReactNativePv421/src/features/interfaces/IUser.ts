@@ -5,6 +5,7 @@ export default interface IUser {
     birthdate: Date,
     email: string,
     phone?: string,
+    city?: string,
 };
 
 /*
