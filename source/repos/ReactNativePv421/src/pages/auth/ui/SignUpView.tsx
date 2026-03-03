@@ -5,6 +5,16 @@ import DatePicker from "react-native-date-picker";
 import { ButtonTypes, FirmButton } from "../../../features/ui/button/FirmButton";
 import AppContext from "../../../features/context/AppContext";
 
+declare global {
+    interface Date {
+        toSqlDateTime(): string;
+    }
+}
+
+Date.prototype.toSqlDateTime = function() {
+    return this.toISOString().slice(0, 19).replace('T', ' ');
+};
+
 interface IUserFormData {
     name: string,
     email: string,
@@ -41,26 +51,40 @@ export default function SignUpView({setPageMode}:{setPageMode:React.Dispatch<Rea
     const {showModal} = useContext(AppContext);
 
     const validateForm = (): string | null => {
-        if (userFormData.name.length <= 2) return "Ім'я занадто коротке (мінімум 3 символи)";
+
+        let errorMessages = [];
+
+        if (userFormData.name.length <= 2) 
+            errorMessages.push("Ім'я занадто коротке (мінімум 3 символи)");
         
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(userFormData.email)) return "Некоректний формат E-mail";
+        if (!emailRegex.test(userFormData.email)) 
+            errorMessages.push("Некоректний формат E-mail");
         
         const phoneRegex = /^\+\d{12}$/;
-        if (!phoneRegex.test(userFormData.phone)) return "Телефон має бути у форматі +380XXXXXXXXX (з плюсом та 12 цифр)";
+        if (!phoneRegex.test(userFormData.phone)) 
+            errorMessages.push("Телефон має бути у форматі +380XXXXXXXXX (з плюсом та 12 цифр)");
         
-        if (userFormData.password.length < 3) return "Пароль занадто короткий";
-        if (userFormData.password !== userFormData.repeat) return "Паролі не збігаються";
+        if (userFormData.password.length < 3) 
+            errorMessages.push("Пароль занадто короткий");
+
+        if (userFormData.password !== userFormData.repeat) 
+            errorMessages.push("Паролі не збігаються");
         
-        return null; 
+        return errorMessages.length > 0 ? errorMessages.join("\n") : null; 
     };
 
     useEffect(() => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\+\d{12}$/;
+
         setFormValid(
             userFormData.name.length > 2 &&
-            userFormData.email.length > 5 &&
+            emailRegex.test(userFormData.email) &&
+            phoneRegex.test(userFormData.phone) &&
             userFormData.birthdate != null &&
-            userFormData.password.length > 2
+            userFormData.password.length >= 3 &&
+            userFormData.password === userFormData.repeat
         );
     }, [userFormData]);
 
@@ -174,6 +198,7 @@ export default function SignUpView({setPageMode}:{setPageMode:React.Dispatch<Rea
             action={onSignupButtonPress} />
     </>;
 }
+
 /*
 Д.З. Реєстрація нового користувача:
 - додати поле "повторити пароль", до валідації форми додати відповідне порівняння
